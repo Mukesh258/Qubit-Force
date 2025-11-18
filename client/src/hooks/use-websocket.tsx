@@ -26,9 +26,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   const connect = useCallback(() => {
     try {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+      const API_BASE = (import.meta.env.VITE_API_BASE as string) || "";
+
+      let wsUrl: string;
+      if (API_BASE && API_BASE.length > 0) {
+        // convert https://example.com -> wss://example.com, http -> ws
+        wsUrl = API_BASE.replace(/^http/, window.location.protocol === "https:" ? "wss" : "ws");
+        // ensure no trailing slash
+        wsUrl = wsUrl.replace(/\/$/, "") + "/ws";
+      } else {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        wsUrl = `${protocol}//${window.location.host}/ws`;
+      }
+
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
